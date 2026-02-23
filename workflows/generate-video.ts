@@ -117,7 +117,7 @@ async function saveGeneration(
 }
 
 async function closeStream() {
-  "use step";
+  // use step
   await getWritable().close();
 }
 
