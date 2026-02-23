@@ -11,18 +11,27 @@ export async function GET(request: Request) {
   }
 
   // Only allow proxying from known video hosts
+  let parsed: URL;
   try {
-    const parsed = new URL(url);
+    parsed = new URL(url);
     const allowedHosts = ["vidgen.x.ai"];
     if (!allowedHosts.some((h) => parsed.hostname.endsWith(h))) {
       return new Response("URL host not allowed", { status: 403 });
+    }
+    // Restrict to HTTP(S) schemes only
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return new Response("URL scheme not allowed", { status: 400 });
+    }
+    // Optionally restrict ports (allow default ports or none)
+    if (parsed.port && parsed.port !== "80" && parsed.port !== "443") {
+      return new Response("URL port not allowed", { status: 400 });
     }
   } catch {
     return new Response("Invalid URL", { status: 400 });
   }
 
   try {
-    const upstream = await fetch(url);
+    const upstream = await fetch(parsed.toString());
     if (!upstream.ok) {
       return new Response("Upstream fetch failed", { status: upstream.status });
     }
